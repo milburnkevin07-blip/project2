@@ -1,21 +1,44 @@
 import { Platform } from "react-native";
 
+// ✨ VIBRANT COLOR PALETTE - More energetic and modern
 export const AppColors = {
-  primary: "#2D5F8D",
-  accent: "#E67E22",
-  background: "#F8F9FA",
+  // Primary colors - More vibrant blue
+  primary: "#2563EB",           // Brighter blue (was #2D5F8D)
+  primaryLight: "#60A5FA",
+  primaryDark: "#1E40AF",
+  
+  // Accent colors - Bolder orange
+  accent: "#F97316",            // More vibrant orange (was #E67E22)
+  accentLight: "#FB923C",
+  accentDark: "#EA580C",
+  
+  // Backgrounds
+  background: "#FFFFFF",
+  backgroundSecondary: "#F8FAFC",
   surface: "#FFFFFF",
-  textPrimary: "#1A1A1A",
-  textSecondary: "#6B7280",
-  statusNotStarted: "#94A3B8",
-  statusInProgress: "#3B82F6",
-  statusCompleted: "#10B981",
-  error: "#EF4444",
-  border: "#E5E7EB",
+  
+  // Text
+  textPrimary: "#0F172A",       // Darker, more contrast
+  textSecondary: "#64748B",
+  
+  // Status colors - More vibrant
+  statusNotStarted: "#F59E0B",   // Warm amber
+  statusInProgress: "#3B82F6",   // Vibrant blue
+  statusCompleted: "#10B981",    // Fresh green
+  
+  // Semantic colors - Punchy and clear
+  success: "#10B981",            // Emerald green
+  warning: "#F59E0B",            // Amber
+  error: "#EF4444",              // Bright red
+  info: "#3B82F6",               // Blue
+  
+  // Borders
+  border: "#E2E8F0",
+  borderLight: "#F1F5F9",
 };
 
 const tintColorLight = AppColors.primary;
-const tintColorDark = "#4A90C4";
+const tintColorDark = "#60A5FA";
 
 export const Colors = {
   light: {
@@ -27,26 +50,26 @@ export const Colors = {
     link: AppColors.primary,
     backgroundRoot: AppColors.background,
     backgroundDefault: AppColors.surface,
-    backgroundSecondary: "#F2F2F2",
-    backgroundTertiary: "#E6E6E6",
+    backgroundSecondary: AppColors.backgroundSecondary,
+    backgroundTertiary: "#F1F5F9",
     border: AppColors.border,
     primary: AppColors.primary,
     accent: AppColors.accent,
   },
   dark: {
-    text: "#ECEDEE",
-    textSecondary: "#9BA1A6",
+    text: "#F1F5F9",
+    textSecondary: "#94A3B8",
     buttonText: "#FFFFFF",
-    tabIconDefault: "#9BA1A6",
+    tabIconDefault: "#94A3B8",
     tabIconSelected: tintColorDark,
     link: tintColorDark,
-    backgroundRoot: "#1F2123",
-    backgroundDefault: "#2A2C2E",
-    backgroundSecondary: "#353739",
-    backgroundTertiary: "#404244",
-    border: "#404244",
+    backgroundRoot: "#0F172A",
+    backgroundDefault: "#1E293B",
+    backgroundSecondary: "#334155",
+    backgroundTertiary: "#475569",
+    border: "#334155",
     primary: tintColorDark,
-    accent: "#F09845",
+    accent: "#FB923C",
   },
 };
 
@@ -68,33 +91,74 @@ export const Spacing = {
 export const BorderRadius = {
   xs: 8,
   sm: 12,
-  md: 18,
-  lg: 24,
-  xl: 30,
-  "2xl": 40,
-  "3xl": 50,
+  md: 16,
+  lg: 20,
+  xl: 24,
+  "2xl": 32,
+  "3xl": 40,
+  round: 9999,
   full: 9999,
+};
+
+// Enhanced shadows for depth
+export const Shadows = {
+  small: Platform.select({
+    ios: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    android: {
+      elevation: 2,
+    },
+  }),
+  medium: Platform.select({
+    ios: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+    },
+    android: {
+      elevation: 4,
+    },
+  }),
+  large: Platform.select({
+    ios: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 16,
+    },
+    android: {
+      elevation: 8,
+    },
+  }),
 };
 
 export const Typography = {
   h1: {
-    fontSize: 32,
-    lineHeight: 40,
+    fontSize: 34,
+    lineHeight: 42,
     fontWeight: "700" as const,
+    letterSpacing: -0.5,
   },
   h2: {
     fontSize: 28,
     lineHeight: 36,
     fontWeight: "700" as const,
+    letterSpacing: -0.3,
   },
   h3: {
-    fontSize: 24,
-    lineHeight: 32,
+    fontSize: 22,
+    lineHeight: 30,
     fontWeight: "600" as const,
+    letterSpacing: -0.2,
   },
   h4: {
-    fontSize: 20,
-    lineHeight: 28,
+    fontSize: 18,
+    lineHeight: 26,
     fontWeight: "600" as const,
   },
   body: {
@@ -102,20 +166,35 @@ export const Typography = {
     lineHeight: 24,
     fontWeight: "400" as const,
   },
+  bodyMedium: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: "500" as const,
+  },
   small: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "400" as const,
+  },
+  smallMedium: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500" as const,
   },
   caption: {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "400" as const,
   },
+  captionMedium: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500" as const,
+  },
   link: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: "400" as const,
+    fontWeight: "500" as const,
   },
 };
 

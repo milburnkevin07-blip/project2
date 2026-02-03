@@ -2,7 +2,7 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HeaderButton } from "@react-navigation/elements";
@@ -63,6 +63,18 @@ function ProfileWrapper() {
   return <ProfileScreen />;
 }
 
+// ✨ Emoji Tab Icon Component
+function EmojiTabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+  return (
+    <Text style={{ 
+      fontSize: 28,
+      opacity: focused ? 1 : 0.6,
+    }}>
+      {emoji}
+    </Text>
+  );
+}
+
 export default function MainTabNavigator() {
   const { theme, isDark } = useTheme();
   const screenOptions = useScreenOptions();
@@ -99,8 +111,8 @@ export default function MainTabNavigator() {
         options={{
           title: "Home",
           headerTitle: () => <HeaderTitle title="Client Job Manager" />,
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="home" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <EmojiTabIcon emoji="🏠" focused={focused} />
           ),
         }}
       />
@@ -110,8 +122,8 @@ export default function MainTabNavigator() {
         options={({ navigation }) => ({
           title: "Clients",
           headerTitle: "Clients",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="users" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <EmojiTabIcon emoji="👥" focused={focused} />
           ),
           headerRight: () => (
             <HeaderButton
@@ -134,8 +146,8 @@ export default function MainTabNavigator() {
         options={{
           title: "Jobs",
           headerTitle: "Jobs",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="briefcase" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <EmojiTabIcon emoji="💼" focused={focused} />
           ),
         }}
       />
@@ -145,8 +157,8 @@ export default function MainTabNavigator() {
         options={{
           title: "Calendar",
           headerTitle: "Calendar",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="calendar" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <EmojiTabIcon emoji="📅" focused={focused} />
           ),
         }}
       />
@@ -156,8 +168,8 @@ export default function MainTabNavigator() {
         options={{
           title: "Profile",
           headerTitle: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <EmojiTabIcon emoji="👤" focused={focused} />
           ),
         }}
       />

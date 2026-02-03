@@ -15,7 +15,7 @@ import { FAB } from "@/components/FAB";
 import { useData } from "@/context/DataContext";
 import { useTheme } from "@/hooks/useTheme";
 import { useSettings } from "@/context/SettingsContext";
-import { Spacing, BorderRadius, AppColors } from "@/constants/theme";
+import { Spacing, BorderRadius, AppColors, Shadows } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { MainTabParamList } from "@/navigation/MainTabNavigator";
 
@@ -106,33 +106,43 @@ export default function DashboardScreen() {
             title="Active Jobs"
             value={activeJobs.length}
             icon="briefcase"
-            color={AppColors.statusInProgress}
+            color="#3B82F6"
+            emoji="💼"
           />
           <View style={styles.statSpacer} />
           <StatCard
             title="Total Clients"
             value={clients.length}
             icon="users"
-            color={AppColors.primary}
+            color="#2D5F8D"
+            emoji="👥"
           />
           <View style={styles.statSpacer} />
           <StatCard
             title="Pending"
             value={formatCurrency(pendingTotal)}
             icon="dollar-sign"
-            color={AppColors.warning}
+            color="#F59E0B"
+            emoji="💰"
           />
         </View>
 
         {upcomingJobs.length > 0 ? (
           <>
             <View style={styles.sectionHeader}>
-              <ThemedText type="h4">Upcoming Due Dates</ThemedText>
+              <View style={styles.sectionTitleRow}>
+                <Feather name="clock" size={20} color={AppColors.warning} style={{ marginRight: 8 }} />
+                <ThemedText type="h4">Upcoming Due Dates</ThemedText>
+              </View>
               <Pressable onPress={handleViewCalendar}>
                 <ThemedText type="link">Calendar</ThemedText>
               </Pressable>
             </View>
-            <View style={[styles.upcomingCard, { backgroundColor: theme.backgroundDefault }]}>
+            <View style={[
+              styles.upcomingCard,
+              { backgroundColor: theme.backgroundDefault },
+              Shadows.small
+            ]}>
               {upcomingJobs.slice(0, 3).map((job, index) => (
                 <Pressable
                   key={job.id}
@@ -154,10 +164,13 @@ export default function DashboardScreen() {
                     </ThemedText>
                   </View>
                   <View style={styles.upcomingDue}>
-                    <Feather name="clock" size={14} color={AppColors.warning} />
-                    <ThemedText type="small" style={{ color: AppColors.warning, marginLeft: 4, fontWeight: "600" }}>
-                      {formatDueDate(job.dueDate!)}
-                    </ThemedText>
+                    <View style={styles.dueBadge}>
+                      <Feather name="clock" size={12} color={AppColors.warning} />
+                      <ThemedText type="small" style={{ color: AppColors.warning, marginLeft: 4, fontWeight: "600" }}>
+                        {formatDueDate(job.dueDate!)}
+                      </ThemedText>
+                    </View>
+                    <Feather name="chevron-right" size={18} color={theme.textSecondary} style={{ marginLeft: 8 }} />
                   </View>
                 </Pressable>
               ))}
@@ -168,9 +181,16 @@ export default function DashboardScreen() {
         {pendingInvoices.length > 0 ? (
           <>
             <View style={styles.sectionHeader}>
-              <ThemedText type="h4">Pending Invoices</ThemedText>
+              <View style={styles.sectionTitleRow}>
+                <Feather name="file-text" size={20} color={AppColors.primary} style={{ marginRight: 8 }} />
+                <ThemedText type="h4">Pending Invoices</ThemedText>
+              </View>
             </View>
-            <View style={[styles.upcomingCard, { backgroundColor: theme.backgroundDefault }]}>
+            <View style={[
+              styles.upcomingCard,
+              { backgroundColor: theme.backgroundDefault },
+              Shadows.small
+            ]}>
               {pendingInvoices.slice(0, 3).map((invoice, index) => (
                 <Pressable
                   key={invoice.id}
@@ -191,9 +211,12 @@ export default function DashboardScreen() {
                       {getClientById(invoice.clientId)?.name || "Unknown"}
                     </ThemedText>
                   </View>
-                  <ThemedText type="body" style={{ fontWeight: "600", color: AppColors.primary }}>
-                    {formatCurrency(invoice.total)}
-                  </ThemedText>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <ThemedText type="body" style={{ fontWeight: "600", color: AppColors.primary }}>
+                      {formatCurrency(invoice.total)}
+                    </ThemedText>
+                    <Feather name="chevron-right" size={18} color={theme.textSecondary} style={{ marginLeft: 8 }} />
+                  </View>
                 </Pressable>
               ))}
             </View>
@@ -201,7 +224,10 @@ export default function DashboardScreen() {
         ) : null}
 
         <View style={styles.sectionHeader}>
-          <ThemedText type="h4">Active Jobs</ThemedText>
+          <View style={styles.sectionTitleRow}>
+            <Feather name="briefcase" size={20} color={AppColors.primary} style={{ marginRight: 8 }} />
+            <ThemedText type="h4">Active Jobs</ThemedText>
+          </View>
           {activeJobs.length > 5 ? (
             <Pressable onPress={handleViewAllJobs}>
               <ThemedText type="link">View All</ThemedText>
@@ -242,27 +268,32 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: "row",
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing["2xl"],  // ✨ More space
   },
   statSpacer: {
-    width: Spacing.sm,
+    width: Spacing.md,  // ✨ Slightly more gap
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing.lg,
+    marginTop: Spacing.sm,  // ✨ Space from previous section
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   upcomingCard: {
-    borderRadius: BorderRadius.sm,
-    marginBottom: Spacing.xl,
+    borderRadius: BorderRadius.lg,  // ✨ Larger radius
+    marginBottom: Spacing["2xl"],
     overflow: "hidden",
   },
   upcomingRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: Spacing.lg,
+    padding: Spacing.xl,  // ✨ More padding
   },
   upcomingInfo: {
     flex: 1,
@@ -272,7 +303,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  dueBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: AppColors.warning + "15",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+  },
   jobItem: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,  // ✨ More space between jobs
   },
 });

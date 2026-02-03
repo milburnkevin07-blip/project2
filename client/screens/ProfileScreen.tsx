@@ -17,7 +17,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
 import { useSettings } from "@/context/SettingsContext";
 import { COUNTRIES, getCountryByCode } from "@/lib/currency";
-import { Spacing, BorderRadius, AppColors } from "@/constants/theme";
+import { Spacing, BorderRadius, AppColors, Shadows } from "@/constants/theme";
+import { PaymentTerms, PAYMENT_TERMS_LABELS } from "@/types";
 
 const showAlert = (
   title: string,
@@ -28,17 +29,11 @@ const showAlert = (
 ) => {
   if (Platform.OS === "web") {
     const result = window.confirm(`${title}\n\n${message}`);
-    if (result) {
-      onConfirm();
-    }
+    if (result) onConfirm();
   } else {
     Alert.alert(title, message, [
       { text: "Cancel", style: "cancel" },
-      {
-        text: confirmText,
-        style: isDestructive ? "destructive" : "default",
-        onPress: onConfirm,
-      },
+      { text: confirmText, style: isDestructive ? "destructive" : "default", onPress: onConfirm },
     ]);
   }
 };
@@ -55,22 +50,37 @@ export default function ProfileScreen() {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [showClearDataModal, setShowClearDataModal] = useState(false);
   const [showLogoModal, setShowLogoModal] = useState(false);
+  const [showCompanyDetailsModal, setShowCompanyDetailsModal] = useState(false);
+  const [showPaymentTermsModal, setShowPaymentTermsModal] = useState(false);
+
+  // Logo modal state
   const [tempLogoSize, setTempLogoSize] = useState(settings.logoSize || 80);
   const [companyNameInput, setCompanyNameInput] = useState(settings.companyName || "");
+
+  // Company details modal state
+  const [businessAddress, setBusinessAddress] = useState(settings.businessAddress || "");
+  const [businessCity, setBusinessCity] = useState(settings.businessCity || "");
+  const [businessPostcode, setBusinessPostcode] = useState(settings.businessPostcode || "");
+  const [businessPhone, setBusinessPhone] = useState(settings.businessPhone || "");
+  const [businessEmail, setBusinessEmail] = useState(settings.businessEmail || "");
+  const [vatNumber, setVatNumber] = useState(settings.vatNumber || "");
+
+  // Clear data modal state
   const [clearDataStep, setClearDataStep] = useState<"warning" | "pin">("warning");
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
   const [isClearing, setIsClearing] = useState(false);
 
   const currentCountry = getCountryByCode(settings.country);
-
   const totalInvoiceValue = invoices.reduce((sum, inv) => sum + inv.total, 0);
+
+  // ✨ Check if company details are filled
+  const hasCompanyDetails = !!(settings.businessAddress || settings.businessCity || settings.businessPhone || settings.businessEmail);
 
   const handleLogout = async () => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    
     showAlert(
       "Log Out",
       "Are you sure you want to log out?",
@@ -87,6 +97,50 @@ export default function ProfileScreen() {
       "Log Out",
       true
     );
+  };
+
+  // ✨ Save company details
+  const handleSaveCompanyDetails = async () => {
+    try {
+      await updateSettings({
+        businessAddress: businessAddress.trim() || undefined,
+        businessCity: businessCity.trim() || undefined,
+        businessPostcode: businessPostcode.trim() || undefined,
+        businessPhone: businessPhone.trim() || undefined,
+        businessEmail: businessEmail.trim() || undefined,
+        vatNumber: vatNumber.trim() || undefined,
+      });
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      setShowCompanyDetailsModal(false);
+    } catch (error) {
+      console.error("Failed to save company details:", error);
+    }
+  };
+
+  // ✨ Save payment terms
+  const handleSelectPaymentTerms = async (terms: PaymentTerms) => {
+    try {
+      await updateSettings({ defaultPaymentTerms: terms });
+      if (Platform.OS !== "web") {
+        Haptics.selectionAsync();
+      }
+      setShowPaymentTermsModal(false);
+    } catch (error) {
+      console.error("Failed to save payment terms:", error);
+    }
+  };
+
+  // ✨ Open company details modal with fresh state
+  const handleOpenCompanyDetails = () => {
+    setBusinessAddress(settings.businessAddress || "");
+    setBusinessCity(settings.businessCity || "");
+    setBusinessPostcode(settings.businessPostcode || "");
+    setBusinessPhone(settings.businessPhone || "");
+    setBusinessEmail(settings.businessEmail || "");
+    setVatNumber(settings.vatNumber || "");
+    setShowCompanyDetailsModal(true);
   };
 
   const handleClearDataPress = () => {
@@ -110,15 +164,12 @@ export default function ProfileScreen() {
 
   const handlePinDigit = (digit: string) => {
     if (pinInput.length >= 4) return;
-    
     if (Platform.OS !== "web") {
       Haptics.selectionAsync();
     }
-    
     const newPin = pinInput + digit;
     setPinInput(newPin);
     setPinError("");
-    
     if (newPin.length === 4) {
       verifyAndClear(newPin);
     }
@@ -134,7 +185,6 @@ export default function ProfileScreen() {
 
   const verifyAndClear = async (pin: string) => {
     const isValid = await verifyPin(pin);
-    
     if (!isValid) {
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -143,9 +193,7 @@ export default function ProfileScreen() {
       setPinInput("");
       return;
     }
-
     setIsClearing(true);
-    
     try {
       const AsyncStorage = require("@react-native-async-storage/async-storage").default;
       await AsyncStorage.removeItem("@clients");
@@ -154,13 +202,10 @@ export default function ProfileScreen() {
       await AsyncStorage.removeItem("@client_notes");
       await AsyncStorage.removeItem("@invoice_counter");
       await refreshData();
-      
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      
       setShowClearDataModal(false);
-      
       if (Platform.OS === "web") {
         window.alert("All data has been permanently deleted.");
       } else {
@@ -196,14 +241,12 @@ export default function ProfileScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
-
     if (!result.canceled && result.assets[0]) {
       await updateSettings({ companyLogo: result.assets[0].uri });
       if (Platform.OS !== "web") {
@@ -229,7 +272,7 @@ export default function ProfileScreen() {
 
   const handleSaveLogoSettings = async () => {
     try {
-      await updateSettings({ 
+      await updateSettings({
         logoSize: tempLogoSize,
         companyName: companyNameInput.trim() || undefined,
       });
@@ -270,7 +313,6 @@ export default function ProfileScreen() {
         styles.menuItem,
         { backgroundColor: pressed ? theme.backgroundSecondary : theme.backgroundDefault },
       ]}
-      testID={`menu-item-${title.toLowerCase().replace(/\s+/g, "-")}`}
     >
       <View
         style={[
@@ -285,10 +327,7 @@ export default function ProfileScreen() {
         />
       </View>
       <View style={styles.menuContent}>
-        <ThemedText
-          type="body"
-          style={{ color: destructive ? AppColors.error : theme.text }}
-        >
+        <ThemedText type="body" style={{ color: destructive ? AppColors.error : theme.text }}>
           {title}
         </ThemedText>
         {subtitle ? (
@@ -332,7 +371,7 @@ export default function ProfileScreen() {
     <View
       style={[
         styles.pinDot,
-        { 
+        {
           backgroundColor: filled ? AppColors.error : "transparent",
           borderColor: pinError ? AppColors.error : theme.border,
         },
@@ -343,7 +382,6 @@ export default function ProfileScreen() {
   const PinButton = ({ digit, onPress }: { digit: string; onPress: () => void }) => (
     <Pressable
       onPress={onPress}
-      testID={`confirm-pin-${digit}`}
       style={({ pressed }) => [
         styles.pinButton,
         { backgroundColor: pressed ? theme.backgroundSecondary : theme.backgroundDefault },
@@ -364,38 +402,29 @@ export default function ProfileScreen() {
         }}
         scrollIndicatorInsets={{ bottom: insets.bottom }}
       >
+        {/* Stats Row */}
         <View style={styles.statsContainer}>
-          <View style={[styles.statBox, { backgroundColor: theme.backgroundDefault }]}>
+          <View style={[styles.statBox, { backgroundColor: theme.backgroundDefault }, Shadows.small]}>
             <ThemedText type="h2">{clients.length}</ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              Clients
-            </ThemedText>
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>Clients</ThemedText>
           </View>
           <View style={styles.statDivider} />
-          <View style={[styles.statBox, { backgroundColor: theme.backgroundDefault }]}>
+          <View style={[styles.statBox, { backgroundColor: theme.backgroundDefault }, Shadows.small]}>
             <ThemedText type="h2">{jobs.length}</ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              Jobs
-            </ThemedText>
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>Jobs</ThemedText>
           </View>
           <View style={styles.statDivider} />
-          <View style={[styles.statBox, { backgroundColor: theme.backgroundDefault }]}>
-            <ThemedText type="h2">
-              {jobs.filter((j) => j.status === "completed").length}
-            </ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              Completed
-            </ThemedText>
+          <View style={[styles.statBox, { backgroundColor: theme.backgroundDefault }, Shadows.small]}>
+            <ThemedText type="h2">{jobs.filter((j) => j.status === "completed").length}</ThemedText>
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>Completed</ThemedText>
           </View>
         </View>
 
-        <ThemedText
-          type="small"
-          style={[styles.sectionTitle, { color: theme.textSecondary }]}
-        >
+        {/* Company Branding */}
+        <ThemedText type="small" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
           COMPANY BRANDING
         </ThemedText>
-        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }]}>
+        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }, Shadows.small]}>
           <Pressable
             onPress={handleOpenLogoSettings}
             style={({ pressed }) => [
@@ -405,10 +434,7 @@ export default function ProfileScreen() {
           >
             <View style={styles.logoPreviewContainer}>
               {settings.companyLogo ? (
-                <Image
-                  source={{ uri: settings.companyLogo }}
-                  style={[styles.logoPreview, { width: 50, height: 50 }]}
-                />
+                <Image source={{ uri: settings.companyLogo }} style={[styles.logoPreview, { width: 50, height: 50 }]} />
               ) : (
                 <View style={[styles.logoPlaceholder, { backgroundColor: AppColors.primary + "15" }]}>
                   <Feather name="image" size={24} color={AppColors.primary} />
@@ -425,13 +451,39 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        <ThemedText
-          type="small"
-          style={[styles.sectionTitle, { color: theme.textSecondary }]}
-        >
+        {/* ✨ NEW: Company Details */}
+        <ThemedText type="small" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+          COMPANY DETAILS
+        </ThemedText>
+        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }, Shadows.small]}>
+          <MenuItem
+            icon="map-pin"
+            title="Business Details"
+            subtitle={hasCompanyDetails ? "Address, phone, email, VAT" : "Add your business info"}
+            onPress={handleOpenCompanyDetails}
+            showValue={hasCompanyDetails ? "Edit" : "Add"}
+          />
+        </View>
+
+        {/* ✨ NEW: Invoice Defaults */}
+        <ThemedText type="small" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+          INVOICE DEFAULTS
+        </ThemedText>
+        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }, Shadows.small]}>
+          <MenuItem
+            icon="clock"
+            title="Default Payment Terms"
+            subtitle="Applied to new invoices"
+            onPress={() => setShowPaymentTermsModal(true)}
+            showValue={settings.defaultPaymentTerms ? PAYMENT_TERMS_LABELS[settings.defaultPaymentTerms] : "Not set"}
+          />
+        </View>
+
+        {/* Regional Settings */}
+        <ThemedText type="small" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
           REGIONAL SETTINGS
         </ThemedText>
-        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }]}>
+        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }, Shadows.small]}>
           <MenuItem
             icon="globe"
             title="Country & Currency"
@@ -441,13 +493,11 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <ThemedText
-          type="small"
-          style={[styles.sectionTitle, { color: theme.textSecondary }]}
-        >
+        {/* Account */}
+        <ThemedText type="small" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
           ACCOUNT
         </ThemedText>
-        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }]}>
+        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }, Shadows.small]}>
           <MenuItem
             icon="log-out"
             title="Log Out"
@@ -456,13 +506,11 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <ThemedText
-          type="small"
-          style={[styles.sectionTitle, { color: theme.textSecondary }]}
-        >
+        {/* Data */}
+        <ThemedText type="small" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
           DATA
         </ThemedText>
-        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }]}>
+        <View style={[styles.menuSection, { backgroundColor: theme.backgroundDefault }, Shadows.small]}>
           <MenuItem
             icon="trash-2"
             title="Clear All Data"
@@ -472,14 +520,133 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <ThemedText
-          type="small"
-          style={[styles.version, { color: theme.textSecondary }]}
-        >
+        <ThemedText type="small" style={[styles.version, { color: theme.textSecondary }]}>
           Client Job Manager v1.0.0
         </ThemedText>
       </KeyboardAwareScrollViewCompat>
 
+      {/* ✨ NEW: Company Details Modal */}
+      <Modal
+        visible={showCompanyDetailsModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowCompanyDetailsModal(false)}
+      >
+        <ThemedView style={[styles.modalContainer, { paddingTop: insets.top }]}>
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setShowCompanyDetailsModal(false)}>
+              <ThemedText type="body" style={{ color: theme.link }}>Cancel</ThemedText>
+            </Pressable>
+            <ThemedText type="h4">Business Details</ThemedText>
+            <Pressable onPress={handleSaveCompanyDetails}>
+              <ThemedText type="body" style={{ color: theme.link, fontWeight: "600" }}>Save</ThemedText>
+            </Pressable>
+          </View>
+
+          <KeyboardAwareScrollViewCompat style={{ flex: 1 }}>
+            <ThemedText type="small" style={[styles.modalSectionTitle, { color: theme.textSecondary }]}>
+              ADDRESS
+            </ThemedText>
+            <Input
+              placeholder="Street address"
+              value={businessAddress}
+              onChangeText={setBusinessAddress}
+            />
+            <View style={styles.rowInputs}>
+              <View style={{ flex: 1, marginRight: Spacing.sm }}>
+                <Input
+                  placeholder="City / Town"
+                  value={businessCity}
+                  onChangeText={setBusinessCity}
+                />
+              </View>
+              <View style={{ flex: 0.7 }}>
+                <Input
+                  placeholder="Postcode"
+                  value={businessPostcode}
+                  onChangeText={setBusinessPostcode}
+                />
+              </View>
+            </View>
+
+            <ThemedText type="small" style={[styles.modalSectionTitle, { color: theme.textSecondary }]}>
+              CONTACT
+            </ThemedText>
+            <Input
+              placeholder="Business phone"
+              value={businessPhone}
+              onChangeText={setBusinessPhone}
+              keyboardType="phone-pad"
+            />
+            <Input
+              placeholder="Business email"
+              value={businessEmail}
+              onChangeText={setBusinessEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <ThemedText type="small" style={[styles.modalSectionTitle, { color: theme.textSecondary }]}>
+              TAX
+            </ThemedText>
+            <Input
+              placeholder="VAT / Tax registration number"
+              value={vatNumber}
+              onChangeText={setVatNumber}
+              autoCapitalize="characters"
+            />
+          </KeyboardAwareScrollViewCompat>
+        </ThemedView>
+      </Modal>
+
+      {/* ✨ NEW: Payment Terms Modal */}
+      <Modal
+        visible={showPaymentTermsModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPaymentTermsModal(false)}
+      >
+        <ThemedView style={[styles.modalContainer, { paddingTop: insets.top }]}>
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setShowPaymentTermsModal(false)}>
+              <ThemedText type="body" style={{ color: theme.link }}>Cancel</ThemedText>
+            </Pressable>
+            <ThemedText type="h4">Payment Terms</ThemedText>
+            <View style={{ width: 60 }} />
+          </View>
+
+          <ThemedText type="small" style={[styles.modalSubtitle, { color: theme.textSecondary }]}>
+            This will be the default for all new invoices.
+          </ThemedText>
+
+          <View style={{ marginTop: Spacing.md }}>
+            {(Object.keys(PAYMENT_TERMS_LABELS) as PaymentTerms[]).map((term) => (
+              <Pressable
+                key={term}
+                onPress={() => handleSelectPaymentTerms(term)}
+                style={[
+                  styles.paymentTermItem,
+                  { 
+                    backgroundColor: settings.defaultPaymentTerms === term ? AppColors.primary + "15" : theme.backgroundDefault,
+                    borderColor: settings.defaultPaymentTerms === term ? AppColors.primary : theme.border,
+                  },
+                ]}
+              >
+                <View>
+                  <ThemedText type="body" style={{ fontWeight: settings.defaultPaymentTerms === term ? "600" : "400", color: settings.defaultPaymentTerms === term ? AppColors.primary : theme.text }}>
+                    {PAYMENT_TERMS_LABELS[term]}
+                  </ThemedText>
+                </View>
+                {settings.defaultPaymentTerms === term ? (
+                  <Feather name="check" size={20} color={AppColors.primary} />
+                ) : null}
+              </Pressable>
+            ))}
+          </View>
+        </ThemedView>
+      </Modal>
+
+      {/* Country Picker Modal */}
       <Modal
         visible={showCountryPicker}
         animationType="slide"
@@ -489,18 +656,14 @@ export default function ProfileScreen() {
         <ThemedView style={[styles.modalContainer, { paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
             <Pressable onPress={() => setShowCountryPicker(false)}>
-              <ThemedText type="body" style={{ color: theme.link }}>
-                Cancel
-              </ThemedText>
+              <ThemedText type="body" style={{ color: theme.link }}>Cancel</ThemedText>
             </Pressable>
             <ThemedText type="h4">Select Country</ThemedText>
             <View style={{ width: 60 }} />
           </View>
-
           <ThemedText type="small" style={[styles.modalSubtitle, { color: theme.textSecondary }]}>
             Currency will be automatically set based on your country selection.
           </ThemedText>
-
           <FlatList
             data={COUNTRIES}
             keyExtractor={(item) => item.code}
@@ -511,6 +674,7 @@ export default function ProfileScreen() {
         </ThemedView>
       </Modal>
 
+      {/* Clear Data Modal */}
       <Modal
         visible={showClearDataModal}
         animationType="slide"
@@ -520,9 +684,7 @@ export default function ProfileScreen() {
         <ThemedView style={[styles.modalContainer, { paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
             <Pressable onPress={handleCloseClearModal}>
-              <ThemedText type="body" style={{ color: theme.link }}>
-                Cancel
-              </ThemedText>
+              <ThemedText type="body" style={{ color: theme.link }}>Cancel</ThemedText>
             </Pressable>
             <ThemedText type="h4">
               {clearDataStep === "warning" ? "Clear All Data" : "Confirm PIN"}
@@ -535,41 +697,32 @@ export default function ProfileScreen() {
               <View style={[styles.warningIcon, { backgroundColor: AppColors.error + "15" }]}>
                 <Feather name="alert-triangle" size={48} color={AppColors.error} />
               </View>
-              
-              <ThemedText type="h3" style={styles.warningTitle}>
-                Are you sure?
-              </ThemedText>
-              
+              <ThemedText type="h3" style={styles.warningTitle}>Are you sure?</ThemedText>
               <ThemedText type="body" style={[styles.warningMessage, { color: theme.textSecondary }]}>
                 This action will permanently delete all your data. This cannot be undone.
               </ThemedText>
-
               <View style={[styles.deletionList, { backgroundColor: theme.backgroundSecondary }]}>
                 <ThemedText type="small" style={[styles.deletionHeader, { color: theme.textSecondary }]}>
                   THE FOLLOWING WILL BE DELETED:
                 </ThemedText>
-                
                 <View style={styles.deletionItem}>
                   <Feather name="users" size={18} color={AppColors.error} />
                   <ThemedText type="body" style={styles.deletionText}>
                     {clients.length} {clients.length === 1 ? "Client" : "Clients"}
                   </ThemedText>
                 </View>
-                
                 <View style={styles.deletionItem}>
                   <Feather name="briefcase" size={18} color={AppColors.error} />
                   <ThemedText type="body" style={styles.deletionText}>
                     {jobs.length} {jobs.length === 1 ? "Job" : "Jobs"}
                   </ThemedText>
                 </View>
-                
                 <View style={styles.deletionItem}>
                   <Feather name="file-text" size={18} color={AppColors.error} />
                   <ThemedText type="body" style={styles.deletionText}>
                     {invoices.length} {invoices.length === 1 ? "Invoice" : "Invoices"} ({formatCurrency(totalInvoiceValue)})
                   </ThemedText>
                 </View>
-                
                 <View style={styles.deletionItem}>
                   <Feather name="message-square" size={18} color={AppColors.error} />
                   <ThemedText type="body" style={styles.deletionText}>
@@ -577,22 +730,9 @@ export default function ProfileScreen() {
                   </ThemedText>
                 </View>
               </View>
-
               <View style={styles.warningButtons}>
-                <Button
-                  title="Cancel"
-                  variant="secondary"
-                  onPress={handleCloseClearModal}
-                  style={{ flex: 1, marginRight: Spacing.sm }}
-                  testID="clear-data-cancel"
-                />
-                <Button
-                  title="Continue"
-                  variant="destructive"
-                  onPress={handleProceedToPinEntry}
-                  style={{ flex: 1, marginLeft: Spacing.sm }}
-                  testID="clear-data-continue"
-                />
+                <Button title="Cancel" variant="secondary" onPress={handleCloseClearModal} style={{ flex: 1, marginRight: Spacing.sm }} />
+                <Button title="Continue" variant="destructive" onPress={handleProceedToPinEntry} style={{ flex: 1, marginLeft: Spacing.sm }} />
               </View>
             </View>
           ) : (
@@ -600,23 +740,17 @@ export default function ProfileScreen() {
               <View style={[styles.pinIcon, { backgroundColor: AppColors.error + "15" }]}>
                 <Feather name="lock" size={32} color={AppColors.error} />
               </View>
-              
               <ThemedText type="body" style={[styles.pinMessage, { color: theme.textSecondary }]}>
                 Enter your PIN to confirm deletion
               </ThemedText>
-
               <View style={styles.pinDotsContainer}>
                 {[0, 1, 2, 3].map((i) => (
                   <PinDot key={i} filled={pinInput.length > i} />
                 ))}
               </View>
-
               {pinError ? (
-                <ThemedText type="small" style={styles.pinErrorText}>
-                  {pinError}
-                </ThemedText>
+                <ThemedText type="small" style={styles.pinErrorText}>{pinError}</ThemedText>
               ) : null}
-
               <View style={styles.pinPad}>
                 <View style={styles.pinRow}>
                   <PinButton digit="1" onPress={() => handlePinDigit("1")} />
@@ -638,7 +772,6 @@ export default function ProfileScreen() {
                   <PinButton digit="0" onPress={() => handlePinDigit("0")} />
                   <Pressable
                     onPress={handlePinBackspace}
-                    testID="confirm-pin-backspace"
                     style={({ pressed }) => [
                       styles.pinButton,
                       { backgroundColor: pressed ? theme.backgroundSecondary : "transparent" },
@@ -648,17 +781,15 @@ export default function ProfileScreen() {
                   </Pressable>
                 </View>
               </View>
-
               <Pressable onPress={() => setClearDataStep("warning")} style={styles.backButton}>
-                <ThemedText type="body" style={{ color: theme.link }}>
-                  Go Back
-                </ThemedText>
+                <ThemedText type="body" style={{ color: theme.link }}>Go Back</ThemedText>
               </Pressable>
             </View>
           )}
         </ThemedView>
       </Modal>
 
+      {/* Logo Modal */}
       <Modal
         visible={showLogoModal}
         animationType="slide"
@@ -668,18 +799,13 @@ export default function ProfileScreen() {
         <ThemedView style={[styles.modalContainer, { paddingTop: insets.top }]}>
           <View style={styles.modalHeader}>
             <Pressable onPress={() => setShowLogoModal(false)}>
-              <ThemedText type="body" style={{ color: theme.link }}>
-                Cancel
-              </ThemedText>
+              <ThemedText type="body" style={{ color: theme.link }}>Cancel</ThemedText>
             </Pressable>
             <ThemedText type="h4">Company Branding</ThemedText>
             <Pressable onPress={handleSaveLogoSettings}>
-              <ThemedText type="body" style={{ color: theme.link, fontWeight: "600" }}>
-                Save
-              </ThemedText>
+              <ThemedText type="body" style={{ color: theme.link, fontWeight: "600" }}>Save</ThemedText>
             </Pressable>
           </View>
-
           <View style={styles.logoSettingsContent}>
             <View style={styles.logoUploadSection}>
               <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.md }}>
@@ -708,16 +834,10 @@ export default function ProfileScreen() {
                   style={{ flex: 1, marginRight: settings.companyLogo ? Spacing.sm : 0 }}
                 />
                 {settings.companyLogo ? (
-                  <Button
-                    title="Remove"
-                    onPress={handleRemoveLogo}
-                    variant="destructive"
-                    style={{ flex: 1, marginLeft: Spacing.sm }}
-                  />
+                  <Button title="Remove" onPress={handleRemoveLogo} variant="destructive" style={{ flex: 1, marginLeft: Spacing.sm }} />
                 ) : null}
               </View>
             </View>
-
             {settings.companyLogo ? (
               <View style={styles.sizeSliderSection}>
                 <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
@@ -743,16 +863,11 @@ export default function ProfileScreen() {
                 </ThemedText>
               </View>
             ) : null}
-
             <View style={styles.companyNameSection}>
               <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
                 COMPANY NAME (OPTIONAL)
               </ThemedText>
-              <Input
-                placeholder="Your Company Name"
-                value={companyNameInput}
-                onChangeText={setCompanyNameInput}
-              />
+              <Input placeholder="Your Company Name" value={companyNameInput} onChangeText={setCompanyNameInput} />
               <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
                 Displayed on invoices and quotes below the logo
               </ThemedText>
@@ -785,7 +900,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   menuSection: {
-    borderRadius: BorderRadius.sm,
+    borderRadius: BorderRadius.md,
     overflow: "hidden",
     marginBottom: Spacing.xl,
   },
@@ -879,6 +994,26 @@ const styles = StyleSheet.create({
   modalSubtitle: {
     marginBottom: Spacing.lg,
     textAlign: "center",
+  },
+  modalSectionTitle: {
+    marginBottom: Spacing.sm,
+    marginLeft: Spacing.xs,
+    fontWeight: "600",
+    letterSpacing: 1,
+    marginTop: Spacing.xl,
+  },
+  rowInputs: {
+    flexDirection: "row",
+    marginTop: Spacing.sm,
+  },
+  paymentTermItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    marginBottom: Spacing.sm,
   },
   countryList: {
     paddingBottom: Spacing.xl,

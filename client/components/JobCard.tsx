@@ -1,14 +1,15 @@
 import React from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, Platform } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Job, Client } from "@/types";
-import { AppColors, BorderRadius, Spacing } from "@/constants/theme";
+import { AppColors, BorderRadius, Spacing, Shadows } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 
 interface JobCardProps {
@@ -57,6 +58,7 @@ export function JobCard({ job, client, onPress }: JobCardProps) {
       style={[
         styles.card,
         { backgroundColor: theme.backgroundDefault },
+        Shadows.small,
         animatedStyle,
       ]}
       testID={`job-card-${job.id}`}
@@ -69,28 +71,39 @@ export function JobCard({ job, client, onPress }: JobCardProps) {
       />
       <View style={styles.content}>
         <View style={styles.header}>
-          <ThemedText type="h4" style={styles.title} numberOfLines={1}>
-            {job.title}
-          </ThemedText>
-          <StatusBadge status={job.status} />
+          <View style={styles.titleContainer}>
+            <ThemedText type="h4" style={styles.title} numberOfLines={1}>
+              {job.title}
+            </ThemedText>
+            <StatusBadge status={job.status} />
+          </View>
+          <Feather name="chevron-right" size={20} color={theme.textSecondary} />
         </View>
+        
         {client ? (
-          <ThemedText
-            type="small"
-            style={{ color: theme.textSecondary, marginTop: Spacing.xs }}
-            numberOfLines={1}
-          >
-            {client.name}
-            {client.company ? ` - ${client.company}` : ""}
-          </ThemedText>
+          <View style={styles.infoRow}>
+            <Feather name="user" size={14} color={theme.textSecondary} style={styles.icon} />
+            <ThemedText
+              type="small"
+              style={{ color: theme.textSecondary }}
+              numberOfLines={1}
+            >
+              {client.name}
+              {client.company ? ` • ${client.company}` : ""}
+            </ThemedText>
+          </View>
         ) : null}
+        
         {job.dueDate ? (
-          <ThemedText
-            type="small"
-            style={{ color: theme.textSecondary, marginTop: Spacing.xs }}
-          >
-            Due: {formatDate(job.dueDate)}
-          </ThemedText>
+          <View style={styles.infoRow}>
+            <Feather name="calendar" size={14} color={theme.textSecondary} style={styles.icon} />
+            <ThemedText
+              type="small"
+              style={{ color: theme.textSecondary }}
+            >
+              Due: {formatDate(job.dueDate)}
+            </ThemedText>
+          </View>
         ) : null}
       </View>
     </AnimatedPressable>
@@ -99,24 +112,39 @@ export function JobCard({ job, client, onPress }: JobCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: BorderRadius.sm,
+    borderRadius: BorderRadius.lg,  // ✨ Larger radius
     overflow: "hidden",
     flexDirection: "row",
   },
   statusBar: {
-    width: 4,
+    width: 5,  // ✨ Slightly thicker
   },
   content: {
     flex: 1,
-    padding: Spacing.lg,
+    padding: Spacing.xl,  // ✨ More padding
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
+    marginBottom: Spacing.sm,
+  },
+  titleContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginRight: Spacing.sm,
   },
   title: {
     flex: 1,
-    marginRight: Spacing.sm,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.sm,
+  },
+  icon: {
+    marginRight: Spacing.xs,
   },
 });

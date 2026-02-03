@@ -2,17 +2,36 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { JobStatus } from "@/types";
-import { AppColors, BorderRadius, Spacing } from "@/constants/theme";
+import { BorderRadius, Spacing } from "@/constants/theme";
 
 interface StatusBadgeProps {
   status: JobStatus;
   size?: "small" | "medium";
 }
 
+// ✨ NEW: Much more vibrant, distinct colors with borders
 const statusConfig = {
-  not_started: { color: AppColors.statusNotStarted, label: "Not Started" },
-  in_progress: { color: AppColors.statusInProgress, label: "In Progress" },
-  completed: { color: AppColors.statusCompleted, label: "Completed" },
+  not_started: {
+    bg: "#FEF3C7",      // Warm yellow background
+    text: "#92400E",     // Dark brown text
+    border: "#FCD34D",   // Golden border
+    dot: "#F59E0B",      // Amber dot
+    label: "Not Started"
+  },
+  in_progress: {
+    bg: "#DBEAFE",       // Light blue background
+    text: "#1E40AF",     // Deep blue text
+    border: "#60A5FA",   // Sky blue border
+    dot: "#3B82F6",      // Bright blue dot
+    label: "In Progress"
+  },
+  completed: {
+    bg: "#D1FAE5",       // Mint green background
+    text: "#065F46",     // Forest green text
+    border: "#34D399",   // Emerald border
+    dot: "#10B981",      // Green dot
+    label: "Completed"
+  },
 };
 
 export function StatusBadge({ status, size = "small" }: StatusBadgeProps) {
@@ -23,15 +42,18 @@ export function StatusBadge({ status, size = "small" }: StatusBadgeProps) {
     <View
       style={[
         styles.badge,
-        { backgroundColor: config.color + "20" },
+        { 
+          backgroundColor: config.bg,
+          borderColor: config.border,
+        },
         isSmall ? styles.badgeSmall : styles.badgeMedium,
       ]}
     >
-      <View style={[styles.dot, { backgroundColor: config.color }]} />
+      <View style={[styles.dot, { backgroundColor: config.dot }]} />
       <ThemedText
         style={[
           styles.label,
-          { color: config.color },
+          { color: config.text },
           isSmall ? styles.labelSmall : styles.labelMedium,
         ]}
       >
@@ -46,6 +68,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderRadius: BorderRadius.full,
+    borderWidth: 1,          // ✨ NEW: Border for definition
   },
   badgeSmall: {
     paddingHorizontal: Spacing.sm,
