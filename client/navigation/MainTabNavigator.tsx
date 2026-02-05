@@ -11,7 +11,7 @@ import { HeaderTitle } from "@/components/HeaderTitle";
 import DashboardScreen from "@/screens/DashboardScreen";
 import ClientsScreen from "@/screens/ClientsScreen";
 import JobsScreen from "@/screens/JobsScreen";
-import InvoicesScreen from "@/screens/InvoicesScreen";
+import FinanceScreen from "@/screens/FinanceScreen";
 import CalendarScreen from "@/screens/CalendarScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
 import { useTheme } from "@/hooks/useTheme";
@@ -22,7 +22,7 @@ export type MainTabParamList = {
   DashboardTab: undefined;
   ClientsTab: undefined;
   JobsTab: undefined;
-  CalendarTab: undefined;
+  FinanceTab: undefined;
   ProfileTab: undefined;
 };
 
@@ -55,8 +55,9 @@ function JobsWrapper() {
   return <JobsScreen />;
 }
 
-function CalendarWrapper() {
-  return <CalendarScreen />;
+function FinanceWrapper() {
+  return <FinanceScreen />;
+
 }
 
 function ProfileWrapper() {
@@ -141,27 +142,17 @@ export default function MainTabNavigator() {
         })}
       />
       <Tab.Screen
-        name="JobsTab"
-        component={JobsWrapper}
+        name="FinanceTab"
+        component={FinanceWrapper}
         options={{
-          title: "Jobs",
-          headerTitle: "Jobs",
+          title: "Finance",
+          headerTitle: "Finance",
           tabBarIcon: ({ focused }) => (
-            <EmojiTabIcon emoji="💼" focused={focused} />
+            <EmojiTabIcon emoji="💰" focused={focused} />
           ),
         }}
       />
-      <Tab.Screen
-        name="CalendarTab"
-        component={CalendarWrapper}
-        options={{
-          title: "Calendar",
-          headerTitle: "Calendar",
-          tabBarIcon: ({ focused }) => (
-            <EmojiTabIcon emoji="📅" focused={focused} />
-          ),
-        }}
-      />
+      
       <Tab.Screen
         name="ProfileTab"
         component={ProfileWrapper}

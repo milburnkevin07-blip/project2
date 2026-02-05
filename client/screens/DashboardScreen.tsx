@@ -156,7 +156,7 @@ export default function DashboardScreen() {
           <TappableStatCard
             title="Clients"
             value={clients.length}
-            emoji="🧑"
+            emoji="🧑‍💼"
             colors={["#8B5CF6", "#A78BFA"]}  // ✨ Purple gradient
             onPress={handleClientsCardPress}
           />
