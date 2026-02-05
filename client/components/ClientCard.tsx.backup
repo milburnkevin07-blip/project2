@@ -8,7 +8,7 @@ import Animated, {
 import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { Client } from "@/types";
-import { BorderRadius, Spacing, AppColors, Shadows } from "@/constants/theme";
+import { BorderRadius, Spacing, AppColors } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 
 interface ClientCardProps {
@@ -52,7 +52,6 @@ export function ClientCard({ client, jobCount, onPress }: ClientCardProps) {
       style={[
         styles.card,
         { backgroundColor: theme.backgroundDefault },
-        Shadows.small,
         animatedStyle,
       ]}
       testID={`client-card-${client.id}`}
@@ -63,13 +62,13 @@ export function ClientCard({ client, jobCount, onPress }: ClientCardProps) {
         </ThemedText>
       </View>
       <View style={styles.content}>
-        <ThemedText type="h4" numberOfLines={1} style={{ fontWeight: "600" }}>
+        <ThemedText type="h4" numberOfLines={1}>
           {client.name}
         </ThemedText>
         {client.company ? (
           <ThemedText
             type="small"
-            style={{ color: theme.textSecondary, marginTop: 2 }}
+            style={{ color: theme.textSecondary }}
             numberOfLines={1}
           >
             {client.company}
@@ -89,9 +88,8 @@ export function ClientCard({ client, jobCount, onPress }: ClientCardProps) {
               </ThemedText>
             </View>
           ) : null}
-          <View style={[styles.jobBadge, { backgroundColor: AppColors.primary + "15" }]}>
-            <Feather name="briefcase" size={12} color={AppColors.primary} style={{ marginRight: 4 }} />
-            <ThemedText type="small" style={{ color: AppColors.primary, fontWeight: "600" }}>
+          <View style={styles.jobBadge}>
+            <ThemedText type="small" style={{ color: AppColors.primary }}>
               {jobCount} {jobCount === 1 ? "job" : "jobs"}
             </ThemedText>
           </View>
@@ -104,23 +102,23 @@ export function ClientCard({ client, jobCount, onPress }: ClientCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.xl,
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.lg,
     flexDirection: "row",
     alignItems: "center",
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.lg,
+    marginRight: Spacing.md,
   },
   avatarText: {
     color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "600",
   },
   content: {
     flex: 1,
@@ -128,22 +126,20 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: Spacing.sm,
-    flexWrap: "wrap",
-    gap: Spacing.sm,
+    marginTop: Spacing.xs,
   },
   infoItem: {
     flexDirection: "row",
     alignItems: "center",
+    marginRight: Spacing.md,
   },
   infoIcon: {
     marginRight: Spacing.xs,
   },
   jobBadge: {
-    flexDirection: "row",
-    alignItems: "center",
+    backgroundColor: AppColors.primary + "15",
     paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: 2,
     borderRadius: BorderRadius.full,
   },
 });

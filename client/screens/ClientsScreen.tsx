@@ -10,7 +10,7 @@ import { ClientCard } from "@/components/ClientCard";
 import { EmptyState } from "@/components/EmptyState";
 import { useData } from "@/context/DataContext";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius } from "@/constants/theme";
+import { Spacing, BorderRadius, AppColors, Shadows } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { Client } from "@/types";
 
@@ -74,14 +74,12 @@ export default function ClientsScreen() {
               style={[
                 styles.searchBox,
                 { backgroundColor: theme.backgroundDefault },
+                Shadows.small,
               ]}
             >
-              <Feather
-                name="search"
-                size={18}
-                color={theme.textSecondary}
-                style={styles.searchIcon}
-              />
+              <View style={[styles.searchIconCircle, { backgroundColor: AppColors.primary + "15" }]}>
+                <Feather name="search" size={18} color={AppColors.primary} />
+              </View>
               <TextInput
                 style={[styles.searchInput, { color: theme.text }]}
                 placeholder="Search clients..."
@@ -93,8 +91,8 @@ export default function ClientsScreen() {
               />
               {searchQuery.length > 0 ? (
                 <Feather
-                  name="x"
-                  size={18}
+                  name="x-circle"
+                  size={20}
                   color={theme.textSecondary}
                   onPress={() => setSearchQuery("")}
                 />
@@ -123,23 +121,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchContainer: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: BorderRadius.xs,
-    paddingHorizontal: Spacing.md,
-    height: 44,
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.lg,
+    height: 52,
   },
-  searchIcon: {
-    marginRight: Spacing.sm,
+  searchIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.md,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
   },
   cardItem: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
 });
