@@ -408,8 +408,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.25)",
     alignItems: "center",
     justifyContent: "center",
-  marginBottom: Spacing.md,
-},
+    overflow: "visible",
+    marginBottom: Spacing.md,
+  },
   statEmoji: {
     fontSize: 32,
   },
